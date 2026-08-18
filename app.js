@@ -905,6 +905,7 @@ function saveExpense() {
   const category = document.getElementById('expense-category').value;
   const value = parseFloat(document.getElementById('expense-value').value);
   const essential = document.getElementById('expense-essential').value;
+  const dueday = document.getElementById('expense-dueday').value || null;
   const editId = document.getElementById('expense-edit-id').value;
 
   if (!name) { showToast('Informe a descrição da despesa.', 'warning'); return; }
@@ -912,10 +913,10 @@ function saveExpense() {
 
   if (editId) {
     const idx = state.expenses.findIndex(e => e.id === editId);
-    if (idx >= 0) state.expenses[idx] = { ...state.expenses[idx], name, category, value, essential };
+    if (idx >= 0) state.expenses[idx] = { ...state.expenses[idx], name, category, value, essential, dueday };
     showToast('Despesa atualizada!');
   } else {
-    state.expenses.push({ id: uid(), name, category, value, essential });
+    state.expenses.push({ id: uid(), name, category, value, essential, dueday });
     showToast('Despesa adicionada!');
   }
 
@@ -933,6 +934,7 @@ function editExpense(id) {
   document.getElementById('expense-category').value = exp.category;
   document.getElementById('expense-value').value = exp.value;
   document.getElementById('expense-essential').value = String(exp.essential);
+  document.getElementById('expense-dueday').value = exp.dueday || '';
   document.getElementById('modal-expense-title').textContent = 'Editar Despesa';
   openModal('modal-expense');
 }
