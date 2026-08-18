@@ -105,14 +105,14 @@ function formatMonthYear(date) {
 // NAVIGATION
 // ============================================================
 const PAGE_META = {
-  dashboard:  { title: 'Dashboard',              subtitle: 'Visão geral da sua situação financeira' },
-  income:     { title: 'Renda Familiar',          subtitle: 'Fontes de renda cadastradas' },
-  expenses:   { title: 'Despesas Fixas',          subtitle: 'Gastos mensais mapeados' },
-  debts:      { title: 'Gestão de Dívidas',       subtitle: 'Dívidas e comprometimentos' },
-  strategy:   { title: 'Estratégia de Quitação',  subtitle: 'Plano para eliminar suas dívidas' },
-  action:     { title: 'Plano de Ação',           subtitle: 'Tarefas e compromissos do mês' },
+  dashboard: { title: 'Dashboard', subtitle: 'Visão geral da sua situação financeira' },
+  income: { title: 'Renda Familiar', subtitle: 'Fontes de renda cadastradas' },
+  expenses: { title: 'Despesas Fixas', subtitle: 'Gastos mensais mapeados' },
+  debts: { title: 'Gestão de Dívidas', subtitle: 'Dívidas e comprometimentos' },
+  strategy: { title: 'Estratégia de Quitação', subtitle: 'Plano para eliminar suas dívidas' },
+  action: { title: 'Plano de Ação', subtitle: 'Tarefas e compromissos do mês' },
   projection: { title: 'Projeção de Recuperação', subtitle: 'Visualize quando você estará livre' },
-  guide:      { title: 'Centro de Orientação',    subtitle: 'Guias práticos para sair do endividamento' },
+  guide: { title: 'Centro de Orientação', subtitle: 'Guias práticos para sair do endividamento' },
 };
 
 let currentPage = 'dashboard';
@@ -151,12 +151,12 @@ function navigate(page) {
 
 function renderPage(page) {
   switch (page) {
-    case 'dashboard':  renderDashboard(); break;
-    case 'income':     renderIncome(); break;
-    case 'expenses':   renderExpenses(); break;
-    case 'debts':      renderDebts(); break;
-    case 'strategy':   renderStrategy(); break;
-    case 'action':     renderAction(); break;
+    case 'dashboard': renderDashboard(); break;
+    case 'income': renderIncome(); break;
+    case 'expenses': renderExpenses(); break;
+    case 'debts': renderDebts(); break;
+    case 'strategy': renderStrategy(); break;
+    case 'action': renderAction(); break;
     case 'projection': renderProjection(); break;
   }
 }
@@ -431,7 +431,7 @@ function renderDebtsBarChart() {
           ticks: {
             color: '#94A3B8',
             font: { size: 11 },
-            callback: (v) => 'R$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v)
+            callback: (v) => 'R$' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)
           },
           grid: { color: 'rgba(255,255,255,0.05)' }
         }
@@ -713,14 +713,14 @@ function renderCashflowTimeline() {
 
   const html = `<div class="cashflow-timeline">
     ${windows.map((w, i) => {
-      const color = windowColors[i % windowColors.length];
-      const dayLabel = w.day === 31 ? 'Último dia do mês' : (w.day === 1 ? '1º dia útil do mês' : `Dia ${w.day}`);
-      const balClass = w.balance >= 0 ? 'cashflow-balance-positive' : 'cashflow-balance-negative';
-      const SHOW_MAX = 5;
-      const visItems = w.items.slice(0, SHOW_MAX);
-      const extra = w.items.length - SHOW_MAX;
+    const color = windowColors[i % windowColors.length];
+    const dayLabel = w.day === 31 ? 'Último dia do mês' : (w.day === 1 ? '1º dia útil do mês' : `Dia ${w.day}`);
+    const balClass = w.balance >= 0 ? 'cashflow-balance-positive' : 'cashflow-balance-negative';
+    const SHOW_MAX = 5;
+    const visItems = w.items.slice(0, SHOW_MAX);
+    const extra = w.items.length - SHOW_MAX;
 
-      return `<div class="cashflow-window">
+    return `<div class="cashflow-window">
         <div class="cashflow-window-card" style="border-color:${color.border};background:${color.bg}">
           <div class="cashflow-window-header">
             <div>
@@ -751,7 +751,7 @@ function renderCashflowTimeline() {
           </div>
         </div>
       </div>`;
-    }).join('')}
+  }).join('')}
   </div>`;
 
   // Check unassigned (expenses without dueday when multiple windows)
@@ -797,8 +797,8 @@ function renderActionCashflow() {
       </div>
       <div class="action-window-items">
         ${w.items.length === 0
-          ? '<div style="font-size:0.8rem;color:var(--text-muted);padding:8px 14px">Nenhuma conta nesta janela</div>'
-          : w.items.map(item => `
+        ? '<div style="font-size:0.8rem;color:var(--text-muted);padding:8px 14px">Nenhuma conta nesta janela</div>'
+        : w.items.map(item => `
             <div class="action-window-item">
               <span class="action-window-item-name">
                 ${item.isConsignado ? '📋' : item.type === 'debt' ? '💳' : '📤'}
@@ -807,7 +807,7 @@ function renderActionCashflow() {
               </span>
               <span class="action-window-item-value" style="color:var(--red)">−${fmt(item.amount)}</span>
             </div>`).join('')
-        }
+      }
         <div class="action-window-summary">
           <span style="color:var(--text-muted)">Total saídas: <strong style="color:var(--red)">${fmt(w.totalOut)}</strong></span>
           <span class="${balClass}">${w.balance >= 0 ? 'Sobra: +' : 'Falta: '}${fmt(Math.abs(w.balance))}</span>
@@ -839,8 +839,8 @@ function renderExpenses() {
   const total = totalExpenses();
   const essentials = state.expenses.filter(e => e.essential === 'true' || e.essential === true);
   const nonEssentials = state.expenses.filter(e => e.essential === 'false' || e.essential === false);
-  const essTotal = essentials.reduce((s,e) => s+Number(e.value), 0);
-  const nonEssTotal = nonEssentials.reduce((s,e) => s+Number(e.value), 0);
+  const essTotal = essentials.reduce((s, e) => s + Number(e.value), 0);
+  const nonEssTotal = nonEssentials.reduce((s, e) => s + Number(e.value), 0);
 
   document.getElementById('exp-total-card').textContent = fmt(total);
   document.getElementById('exp-count-card').textContent = `${state.expenses.length} despesa(s)`;
@@ -853,7 +853,7 @@ function renderExpenses() {
   const icr = ICR();
   if (icr > 60 && nonEssTotal > 0) {
     cutEl.classList.remove('hidden');
-    cutTextEl.innerHTML = `⚠️ Com ICR de ${fmtPct(icr)}, você deve considerar cortar as <strong>${nonEssentials.length} despesa(s) não essencial(is)</strong> no total de <strong>${fmt(nonEssTotal)}</strong>. Isso reduziria seu ICR para <strong>${fmtPct(Math.max(0, ICR() - (nonEssTotal/totalIncome()*100)))}%</strong>.`;
+    cutTextEl.innerHTML = `⚠️ Com ICR de ${fmtPct(icr)}, você deve considerar cortar as <strong>${nonEssentials.length} despesa(s) não essencial(is)</strong> no total de <strong>${fmt(nonEssTotal)}</strong>. Isso reduziria seu ICR para <strong>${fmtPct(Math.max(0, ICR() - (nonEssTotal / totalIncome() * 100)))}%</strong>.`;
   } else {
     cutEl.classList.add('hidden');
   }
@@ -871,7 +871,7 @@ function renderExpenses() {
 
   const income = totalIncome();
   tbody.innerHTML = filtered.map(exp => {
-    const pct = income > 0 ? ((Number(exp.value)/income)*100).toFixed(1) : '—';
+    const pct = income > 0 ? ((Number(exp.value) / income) * 100).toFixed(1) : '—';
     const isEss = exp.essential === 'true' || exp.essential === true;
     return `
       <tr>
@@ -968,7 +968,7 @@ function renderDebts() {
   document.getElementById('debt-count-card').textContent = `${state.debts.length} dívida(s)`;
   document.getElementById('debt-installments-card').textContent = fmt(totalDebtInstallments());
   const income = totalIncome();
-  const debtPct = income > 0 ? ((totalDebtInstallments()/income)*100).toFixed(1) : '—';
+  const debtPct = income > 0 ? ((totalDebtInstallments() / income) * 100).toFixed(1) : '—';
   document.getElementById('debt-income-pct-card').textContent = debtPct + '%';
 
   if (state.debts.length === 0) {
@@ -979,7 +979,7 @@ function renderDebts() {
   emptyEl.classList.add('hidden');
 
   grid.innerHTML = state.debts.map(debt => {
-    const pct = income > 0 ? ((Number(debt.installment)/income)*100).toFixed(1) : '—';
+    const pct = income > 0 ? ((Number(debt.installment) / income) * 100).toFixed(1) : '—';
     const badgeClass = DEBT_TYPE_COLORS[debt.type] || 'badge-gray';
     const barPct = Math.min((Number(debt.balance) / totalDebts()) * 100, 100);
     return `
@@ -1150,7 +1150,7 @@ function renderStrategy() {
 
     return `
       <tr>
-        <td><div class="payoff-order-badge">${i+1}</div></td>
+        <td><div class="payoff-order-badge">${i + 1}</div></td>
         <td><div style="font-weight:600">${escHtml(debt.name)}</div></td>
         <td class="td-secondary">${escHtml(debt.creditor || '—')}</td>
         <td class="amount-negative">${fmt(debt.balance)}</td>
@@ -1204,7 +1204,7 @@ function renderStrategy() {
 
 function renderStrategyImpactChart(ordered) {
   const ctx = document.getElementById('chart-strategy-impact').getContext('2d');
-  const labels = ordered.map(d => d.name.length > 12 ? d.name.slice(0,12)+'…' : d.name);
+  const labels = ordered.map(d => d.name.length > 12 ? d.name.slice(0, 12) + '…' : d.name);
   const data = ordered.map(d => Number(d.installment));
 
   if (chartStrategyImpact) chartStrategyImpact.destroy();
@@ -1230,11 +1230,11 @@ function renderStrategyImpactChart(ordered) {
       maintainAspectRatio: true,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => ` Parcela: ${fmt(ctx.parsed.x)}` }}
+        tooltip: { callbacks: { label: (ctx) => ` Parcela: ${fmt(ctx.parsed.x)}` } }
       },
       scales: {
-        x: { ticks: { color: '#94A3B8', callback: v => 'R$'+v }, grid: { color: 'rgba(255,255,255,0.04)' }},
-        y: { ticks: { color: '#94A3B8', font: { size: 11 } }, grid: { display: false }}
+        x: { ticks: { color: '#94A3B8', callback: v => 'R$' + v }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#94A3B8', font: { size: 11 } }, grid: { display: false } }
       }
     }
   });
@@ -1281,7 +1281,7 @@ function renderAction() {
   const done = state.tasks.filter(t => t.done).length;
   document.getElementById('tasks-done-count').textContent = done;
   document.getElementById('tasks-progress-label').textContent = `${done} de ${total} tarefas`;
-  const pct = total > 0 ? (done/total)*100 : 0;
+  const pct = total > 0 ? (done / total) * 100 : 0;
   document.getElementById('tasks-progress-bar').style.width = pct + '%';
 
   // Filter tasks
@@ -1455,12 +1455,12 @@ function renderProjectionChart(labels, data) {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (c) => ` ${fmt(c.parsed.y)}` }},
+        tooltip: { callbacks: { label: (c) => ` ${fmt(c.parsed.y)}` } },
       },
       scales: {
-        x: { ticks: { color: '#94A3B8', maxTicksLimit: 12, font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' }},
+        x: { ticks: { color: '#94A3B8', maxTicksLimit: 12, font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
         y: {
-          ticks: { color: '#94A3B8', callback: v => 'R$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v) },
+          ticks: { color: '#94A3B8', callback: v => 'R$' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v) },
           grid: { color: 'rgba(255,255,255,0.04)' },
           beginAtZero: true,
         }
@@ -1507,13 +1507,13 @@ function renderICRChart(labels, data) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { labels: { color: '#94A3B8', font: { size: 11 } }},
-        tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` }},
+        legend: { labels: { color: '#94A3B8', font: { size: 11 } } },
+        tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } },
       },
       scales: {
-        x: { ticks: { color: '#94A3B8', maxTicksLimit: 12, font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' }},
+        x: { ticks: { color: '#94A3B8', maxTicksLimit: 12, font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
         y: {
-          ticks: { color: '#94A3B8', callback: v => v+'%' },
+          ticks: { color: '#94A3B8', callback: v => v + '%' },
           grid: { color: 'rgba(255,255,255,0.04)' },
           beginAtZero: true,
         }
@@ -1542,7 +1542,7 @@ function exportData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `financas_livre_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `financas_livre_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('Dados exportados com sucesso!');
