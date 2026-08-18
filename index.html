@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finanças Livre — Reorganização Financeira Pessoal</title>
+  <meta name="description" content="Ferramenta completa para reorganizar suas finanças, controlar dívidas e traçar um plano de recuperação financeira." />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ===================== APP WRAPPER ===================== -->
+<div class="app-wrapper" id="app">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">💚</div>
+      <div>
+        <div class="logo-text">Finanças Livre</div>
+        <div class="logo-sub">Recuperação Financeira</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Visão Geral</div>
+      <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </div>
+
+      <div class="nav-section-label" style="margin-top:12px">Entradas & Saídas</div>
+      <div class="nav-item" data-page="income" onclick="navigate('income')">
+        <span class="nav-icon">💰</span> Renda Familiar
+      </div>
+      <div class="nav-item" data-page="expenses" onclick="navigate('expenses')">
+        <span class="nav-icon">📋</span> Despesas Fixas
+      </div>
+
+      <div class="nav-section-label" style="margin-top:12px">Dívidas</div>
+      <div class="nav-item" data-page="debts" onclick="navigate('debts')">
+        <span class="nav-icon">💳</span> Gestão de Dívidas
+      </div>
+      <div class="nav-item" data-page="strategy" onclick="navigate('strategy')">
+        <span class="nav-icon">♟️</span> Estratégia de Quitação
+      </div>
+
+      <div class="nav-section-label" style="margin-top:12px">Planejamento</div>
+      <div class="nav-item" data-page="action" onclick="navigate('action')">
+        <span class="nav-icon">📅</span> Plano de Ação
+      </div>
+      <div class="nav-item" data-page="projection" onclick="navigate('projection')">
+        <span class="nav-icon">📈</span> Projeção de Recuperação
+      </div>
+
+      <div class="nav-section-label" style="margin-top:12px">Ajuda</div>
+      <div class="nav-item" data-page="guide" onclick="navigate('guide')">
+        <span class="nav-icon">💡</span> Centro de Orientação
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="health-badge">
+        <div class="health-badge-label">Saúde Financeira</div>
+        <div class="health-badge-value" id="sidebar-icr-val">—</div>
+        <div class="health-badge-sub" id="sidebar-icr-label">Calculando...</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn-icon menu-toggle" onclick="toggleMobile()" title="Menu">☰</button>
+        <div>
+          <div class="topbar-title" id="topbar-title">Dashboard</div>
+          <div class="topbar-subtitle" id="topbar-subtitle">Visão geral da sua situação financeira</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary btn-sm" onclick="exportData()" title="Exportar dados">⬇ Exportar</button>
+        <label class="btn btn-secondary btn-sm pointer" title="Importar dados">
+          ⬆ Importar
+          <input type="file" accept=".json" style="display:none" onchange="importData(event)" />
+        </label>
+      </div>
+    </header>
+
+    <!-- ==================== PAGE: DASHBOARD ==================== -->
+    <section class="page-content" id="page-dashboard">
+
+      <!-- Onboarding banner (shown when no data) -->
+      <div class="onboarding-banner" id="onboarding-banner">
+        <div class="onboarding-title">👋 Bem-vindo ao <span class="text-green">Finanças Livre</span></div>
+        <div class="onboarding-text">
+          Esta ferramenta vai te ajudar a sair do endividamento de forma organizada. Comece cadastrando sua renda, depois suas despesas e suas dívidas. Tudo fica salvo no seu navegador com total privacidade.
+        </div>
+        <div class="onboarding-steps">
+          <div class="onboarding-step">
+            <div class="onboarding-step-num">1</div>
+            Cadastre sua <strong>&nbsp;Renda</strong>
+          </div>
+          <div class="onboarding-step">
+            <div class="onboarding-step-num">2</div>
+            Adicione suas <strong>&nbsp;Despesas</strong>
+          </div>
+          <div class="onboarding-step">
+            <div class="onboarding-step-num">3</div>
+            Liste suas <strong>&nbsp;Dívidas</strong>
+          </div>
+          <div class="onboarding-step">
+            <div class="onboarding-step-num">4</div>
+            Veja a <strong>&nbsp;Projeção</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card green">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Renda Familiar Total</div>
+          <div class="stat-value big" id="stat-income">R$ 0,00</div>
+          <div class="stat-sub" id="stat-income-sub">0 fonte(s) cadastrada(s)</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">📤</div>
+          <div class="stat-label">Total Comprometido</div>
+          <div class="stat-value big" id="stat-committed">R$ 0,00</div>
+          <div class="stat-sub" id="stat-committed-sub">Despesas + parcelas de dívidas</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">Saldo Mensal</div>
+          <div class="stat-value big" id="stat-balance">R$ 0,00</div>
+          <div class="stat-sub" id="stat-balance-sub">O que sobra (ou falta)</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">💳</div>
+          <div class="stat-label">Total de Dívidas</div>
+          <div class="stat-value big" id="stat-total-debt">R$ 0,00</div>
+          <div class="stat-sub" id="stat-debt-sub">0 dívida(s) cadastrada(s)</div>
+        </div>
+      </div>
+
+      <!-- ICR + Semaphore Row -->
+      <div class="grid-2" style="margin-bottom:24px;align-items:start">
+        <div class="icr-container">
+          <div class="icr-header">
+            <div>
+              <div class="icr-title">📊 Índice de Comprometimento da Renda (ICR)</div>
+              <div class="text-xs text-muted mt-8">Quanto da sua renda está comprometida com despesas e dívidas</div>
+            </div>
+            <div class="icr-value-badge" id="icr-badge">0%</div>
+          </div>
+          <div class="icr-bar-track">
+            <div class="icr-bar-fill" id="icr-bar" style="width:0%"></div>
+          </div>
+          <div class="icr-zones">
+            <div class="icr-zone"><div class="zone-dot" style="background:#10B981"></div> Saudável (&lt;30%)</div>
+            <div class="icr-zone"><div class="zone-dot" style="background:#F59E0B"></div> Atenção (30–60%)</div>
+            <div class="icr-zone"><div class="zone-dot" style="background:#EF8C44"></div> Crítico (60–100%)</div>
+            <div class="icr-zone"><div class="zone-dot" style="background:#EF4444"></div> Emergencial (&gt;100%)</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center">
+          <div class="semaphore" id="semaphore">
+            <div class="semaphore-light red" id="sem-red"></div>
+            <div class="semaphore-light amber" id="sem-amber"></div>
+            <div class="semaphore-light green" id="sem-green"></div>
+            <div class="semaphore-label" id="sem-label">—</div>
+          </div>
+          <div class="card" style="height:100%">
+            <div style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px">DIAGNÓSTICO ATUAL</div>
+            <div id="diagnosis-text" style="font-size:0.875rem;line-height:1.7;color:var(--text-secondary)">
+              Cadastre sua renda, despesas e dívidas para gerar o diagnóstico automático.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cashflow Timeline -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header">
+          <div class="card-title">📆 Fluxo de Caixa Mensal — Janelas de Recebimento</div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">Entradas e saídas agrupadas por data de recebimento</div>
+        </div>
+        <div id="cashflow-timeline">
+          <div class="empty-state" style="padding:24px">
+            <div class="empty-state-icon" style="font-size:2rem">📆</div>
+            <div class="empty-state-text">Cadastre sua renda com datas de recebimento para ver o fluxo de caixa</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid-2" style="margin-bottom:24px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="card-title-icon">🍩</span> Composição das Despesas</div>
+          </div>
+          <div class="chart-container" style="max-height:260px;position:relative">
+            <canvas id="chart-donut"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="card-title-icon">📊</span> Dívidas por Tipo</div>
+          </div>
+          <div class="chart-container" style="max-height:260px;position:relative">
+            <canvas id="chart-debts-bar"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ Ações Rápidas</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <button class="btn btn-primary" onclick="navigate('income');openModal('modal-income')">+ Adicionar Renda</button>
+          <button class="btn btn-secondary" onclick="navigate('expenses');openModal('modal-expense')">+ Adicionar Despesa</button>
+          <button class="btn btn-secondary" onclick="navigate('debts');openModal('modal-debt')">+ Adicionar Dívida</button>
+          <button class="btn btn-secondary" onclick="navigate('action');openModal('modal-task')">+ Adicionar Tarefa</button>
+          <button class="btn btn-ghost" onclick="navigate('guide')">📚 Ver Orientações</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== PAGE: INCOME ==================== -->
+    <section class="page-content hidden" id="page-income">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">💰 Renda Familiar</h1>
+          <div class="page-subtitle">Cadastre todas as fontes de renda da sua família</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-income')">+ Nova Renda</button>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:24px">
+        <div class="stat-card green">
+          <div class="stat-label">Total de Renda Mensal</div>
+          <div class="stat-value big" id="income-total-card">R$ 0,00</div>
+          <div class="stat-sub" id="income-count-card">0 fonte(s)</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Comprometido da Renda</div>
+          <div class="stat-value big" id="income-icr-card">0%</div>
+          <div class="stat-sub">Índice de Comprometimento da Renda</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Fontes de Renda Cadastradas</div>
+        </div>
+        <div class="table-wrapper">
+          <table id="income-table">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Tipo</th>
+                <th>Valor Líquido</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="income-tbody"></tbody>
+          </table>
+          <div class="empty-state hidden" id="income-empty">
+            <div class="empty-state-icon">💸</div>
+            <div class="empty-state-title">Nenhuma renda cadastrada</div>
+            <div class="empty-state-text">Clique em "Nova Renda" para adicionar seu salário e outras entradas.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE: EXPENSES ==================== -->
+    <section class="page-content hidden" id="page-expenses">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">📋 Despesas Fixas</h1>
+          <div class="page-subtitle">Mapeie e categorize todos os seus gastos mensais</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-expense')">+ Nova Despesa</button>
+      </div>
+
+      <div class="stat-grid" style="margin-bottom:24px">
+        <div class="stat-card red">
+          <div class="stat-label">Total de Despesas</div>
+          <div class="stat-value big" id="exp-total-card">R$ 0,00</div>
+          <div class="stat-sub" id="exp-count-card">0 despesa(s)</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Essenciais</div>
+          <div class="stat-value" id="exp-essential-card">R$ 0,00</div>
+          <div class="stat-sub">Gastos necessários</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">Não Essenciais</div>
+          <div class="stat-value" id="exp-nonessential-card">R$ 0,00</div>
+          <div class="stat-sub">Possíveis cortes</div>
+        </div>
+      </div>
+
+      <div id="cut-suggestion" class="alert alert-warning hidden">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text" id="cut-suggestion-text"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Despesas Cadastradas</div>
+          <div style="display:flex;gap:8px">
+            <select class="form-control" style="width:auto;font-size:0.8rem" onchange="filterExpenses(this.value)">
+              <option value="all">Todas</option>
+              <option value="essential">Essenciais</option>
+              <option value="non-essential">Não Essenciais</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Essencial?</th>
+                <th>Valor Mensal</th>
+                <th>% da Renda</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-tbody"></tbody>
+          </table>
+          <div class="empty-state hidden" id="expenses-empty">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-title">Nenhuma despesa cadastrada</div>
+            <div class="empty-state-text">Adicione seus gastos fixos mensais como moradia, alimentação, contas, etc.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE: DEBTS ==================== -->
+    <section class="page-content hidden" id="page-debts">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">💳 Gestão de Dívidas</h1>
+          <div class="page-subtitle">Mapeie cada dívida com todos os detalhes para planejar a quitação</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-debt')">+ Nova Dívida</button>
+      </div>
+
+      <div class="stat-grid" style="margin-bottom:24px">
+        <div class="stat-card red">
+          <div class="stat-label">Total Devedor</div>
+          <div class="stat-value big" id="debt-total-card">R$ 0,00</div>
+          <div class="stat-sub" id="debt-count-card">0 dívida(s)</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">Parcelas Mensais</div>
+          <div class="stat-value" id="debt-installments-card">R$ 0,00</div>
+          <div class="stat-sub">Comprometimento com dívidas/mês</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">% da Renda em Dívidas</div>
+          <div class="stat-value" id="debt-income-pct-card">0%</div>
+          <div class="stat-sub">Somente parcelas de dívidas</div>
+        </div>
+      </div>
+
+      <div class="grid-auto" id="debt-cards-grid">
+        <!-- Debt cards rendered by JS -->
+      </div>
+      <div class="empty-state hidden" id="debts-empty">
+        <div class="empty-state-icon">💳</div>
+        <div class="empty-state-title">Nenhuma dívida cadastrada</div>
+        <div class="empty-state-text">Adicione seus empréstimos consignados, cartões, e outras dívidas para planejar a quitação.</div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE: STRATEGY ==================== -->
+    <section class="page-content hidden" id="page-strategy">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">♟️ Estratégia de Quitação</h1>
+          <div class="page-subtitle">Escolha a melhor estratégia para eliminar suas dívidas</div>
+        </div>
+        <div class="strategy-toggle">
+          <button class="strategy-btn active" id="btn-avalanche" onclick="setStrategy('avalanche')">🌊 Avalanche</button>
+          <button class="strategy-btn" id="btn-snowball" onclick="setStrategy('snowball')">❄️ Bola de Neve</button>
+        </div>
+      </div>
+
+      <div id="strategy-info-avalanche" class="alert alert-info" style="margin-bottom:20px">
+        <div class="alert-icon">🌊</div>
+        <div class="alert-text"><strong>Método Avalanche:</strong> Pague primeiro a dívida com a <strong>maior taxa de juros</strong>. Economiza mais dinheiro no longo prazo. Matematicamente é a estratégia mais eficiente.</div>
+      </div>
+      <div id="strategy-info-snowball" class="alert alert-success hidden" style="margin-bottom:20px">
+        <div class="alert-icon">❄️</div>
+        <div class="alert-text"><strong>Método Bola de Neve:</strong> Pague primeiro a dívida com o <strong>menor saldo devedor</strong>. Gera vitórias rápidas e mais motivação para continuar. Ideal quando você precisa de estímulo.</div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:24px;align-items:start">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">💡 Resumo da Estratégia</div>
+          </div>
+          <div id="strategy-summary" style="font-size:0.875rem;line-height:1.8;color:var(--text-secondary)">
+            Cadastre suas dívidas para ver o plano de quitação.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📊 Impacto Mensal</div>
+          </div>
+          <div class="chart-container" style="max-height:200px">
+            <canvas id="chart-strategy-impact"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Ordem de Quitação Sugerida</div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Dívida</th>
+                <th>Credor</th>
+                <th>Saldo</th>
+                <th>Parcela</th>
+                <th>Juros a.m.</th>
+                <th>Parcelas Rest.</th>
+                <th>Estimativa Quitação</th>
+              </tr>
+            </thead>
+            <tbody id="strategy-tbody"></tbody>
+          </table>
+          <div class="empty-state hidden" id="strategy-empty">
+            <div class="empty-state-icon">♟️</div>
+            <div class="empty-state-title">Nenhuma dívida para ordenar</div>
+            <div class="empty-state-text">Cadastre suas dívidas na aba "Gestão de Dívidas".</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE: ACTION PLAN ==================== -->
+    <section class="page-content hidden" id="page-action">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">📅 Plano de Ação</h1>
+          <div class="page-subtitle">Tarefas, vencimentos e compromissos do mês</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-task')">+ Nova Tarefa</button>
+      </div>
+
+      <!-- Cashflow by window in action plan -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header">
+          <div class="card-title">📆 Contas por Janela de Recebimento</div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">Veja o que sai em cada data de pagamento</div>
+        </div>
+        <div id="action-cashflow">
+          <div style="font-size:0.875rem;color:var(--text-muted);padding:12px">Cadastre rendas com datas para ver as contas agrupadas.</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:24px;align-items:start">
+        <!-- Auto-generated recommendations -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🤖 Recomendações Automáticas</div>
+          </div>
+          <div id="auto-recommendations" style="font-size:0.875rem;line-height:1.8;color:var(--text-secondary)">
+            Calculando recomendações baseadas no seu perfil...
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">✅ Progresso do Mês</div>
+          </div>
+          <div id="task-progress-section">
+            <div style="font-size:2rem;font-weight:900;color:var(--emerald)" id="tasks-done-count">0</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px">tarefas concluídas</div>
+            <div class="progress-bar" style="height:10px;margin-bottom:8px">
+              <div class="progress-fill" id="tasks-progress-bar" style="width:0%;background:var(--gradient-main)"></div>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-muted)" id="tasks-progress-label">0 de 0 tarefas</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task List -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Tarefas & Compromissos</div>
+          <div style="display:flex;gap:8px">
+            <select class="form-control" style="width:auto;font-size:0.8rem" onchange="filterTasks(this.value)" id="task-filter">
+              <option value="all">Todas</option>
+              <option value="pending">Pendentes</option>
+              <option value="done">Concluídas</option>
+            </select>
+          </div>
+        </div>
+        <div id="task-list">
+          <!-- Tasks rendered by JS -->
+        </div>
+        <div class="empty-state hidden" id="tasks-empty">
+          <div class="empty-state-icon">📅</div>
+          <div class="empty-state-title">Nenhuma tarefa cadastrada</div>
+          <div class="empty-state-text">Adicione tarefas de renegociação, pagamentos e metas mensais.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE: PROJECTION ==================== -->
+    <section class="page-content hidden" id="page-projection">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">📈 Projeção de Recuperação</h1>
+          <div class="page-subtitle">Visualize quando você estará livre das dívidas</div>
+        </div>
+      </div>
+
+      <div class="milestone-grid" id="milestone-grid">
+        <div class="milestone-card">
+          <div class="milestone-icon">🎯</div>
+          <div class="milestone-value" id="milestone-free">—</div>
+          <div class="milestone-label">Livre das dívidas</div>
+        </div>
+        <div class="milestone-card">
+          <div class="milestone-icon">💚</div>
+          <div class="milestone-value" id="milestone-healthy">—</div>
+          <div class="milestone-label">ICR abaixo de 30%</div>
+        </div>
+        <div class="milestone-card">
+          <div class="milestone-icon">💰</div>
+          <div class="milestone-value" id="milestone-savings">R$ 0</div>
+          <div class="milestone-label">Economia potencial em juros</div>
+        </div>
+        <div class="milestone-card">
+          <div class="milestone-icon">📅</div>
+          <div class="milestone-value" id="milestone-months">—</div>
+          <div class="milestone-label">Meses até quitar tudo</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header">
+          <div class="card-title">📉 Evolução do Endividamento Total</div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">Projeção com pagamento mínimo das parcelas</div>
+        </div>
+        <div class="chart-container" style="max-height:320px">
+          <canvas id="chart-projection"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 ICR ao Longo do Tempo</div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">Como seu comprometimento de renda evolui</div>
+        </div>
+        <div class="chart-container" style="max-height:260px">
+          <canvas id="chart-icr-projection"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE: GUIDE ==================== -->
+    <section class="page-content hidden" id="page-guide">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">💡 Centro de Orientação</h1>
+          <div class="page-subtitle">Guias práticos para sair do endividamento e limpar seu nome</div>
+        </div>
+      </div>
+
+      <div class="alert alert-warning" style="margin-bottom:24px">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text">
+          <strong>Você não está sozinho.</strong> Milhões de brasileiros passam por situação similar. Com organização e estratégia, é possível recuperar sua saúde financeira. Siga os passos abaixo.
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <div class="tip-card">
+          <div class="tip-icon-wrap" style="background:var(--red-dim)">🆘</div>
+          <div>
+            <div class="tip-title">Passo 1 — Pare de acumular novas dívidas</div>
+            <div class="tip-text">
+              Antes de qualquer coisa, pare de contratar novos créditos, parcelamentos ou usar cheque especial. Cada nova dívida aumenta o problema. Corte gastos não essenciais imediatamente — mesmo que pareça pequeno, cada real conta. Cancele serviços de streaming, assinaturas e tudo que não for necessário para sobrevivência.
+            </div>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon-wrap" style="background:var(--amber-dim)">📞</div>
+          <div>
+            <div class="tip-title">Passo 2 — Negocie suas dívidas diretamente</div>
+            <div class="tip-text">
+              Entre em contato com cada credor e proponha um acordo. Credores preferem receber menos a não receber nada. Diga claramente que não tem como pagar o valor original e pergunte sobre desconto para pagamento à vista ou parcelamento reduzido. Priorize dívidas com juros mais altos.
+              <br/><strong>Dica:</strong> Anote o nome do atendente, a data e os termos propostos em cada negociação.
+            </div>
+            <a class="tip-link" href="https://www.serasa.com.br/limpa-nome-online/" target="_blank">🔗 Serasa Limpa Nome</a>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon-wrap" style="background:var(--blue-dim)">🏛️</div>
+          <div>
+            <div class="tip-title">Passo 3 — Use plataformas gratuitas de negociação</div>
+            <div class="tip-text">
+              O <strong>Serasa Limpa Nome</strong> e o <strong>Acordo Certo</strong> oferecem descontos de até 99% em alguns casos para dívidas negativadas. O <strong>Consumidor.gov.br</strong> é gratuito e mediado pelo governo. Nunca pague por serviços de "limpa nome" — é golpe.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+              <a class="tip-link" href="https://www.consumidor.gov.br" target="_blank">🔗 Consumidor.gov.br</a>
+              <a class="tip-link" href="https://www.acordocerto.com.br" target="_blank">🔗 Acordo Certo</a>
+              <a class="tip-link" href="https://www.registrato.com.br" target="_blank">🔗 Registrato (BCB)</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon-wrap" style="background:var(--emerald-dim)">💼</div>
+          <div>
+            <div class="tip-title">Passo 4 — Portabilidade de crédito consignado</div>
+            <div class="tip-text">
+              Se você tem empréstimos consignados, pode fazer portabilidade para outra instituição financeira com taxa de juros menor. Isso reduz o valor da parcela sem aumentar o prazo. Consulte seu banco e compare com bancos públicos como Caixa, Banco do Brasil e cooperativas de crédito.
+            </div>
+            <a class="tip-link" href="https://www.bcb.gov.br/meubc/portabilidade" target="_blank">🔗 Portabilidade de Crédito — Banco Central</a>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon-wrap" style="background:var(--purple-dim)">⚖️</div>
+          <div>
+            <div class="tip-title">Passo 5 — PROCON e seus direitos</div>
+            <div class="tip-text">
+              Se um credor cobra valores indevidos, usa práticas abusivas ou recusa negociação, acione o PROCON. É gratuito e tem poder para mediar conflitos. Consumidores têm direito à informação clara sobre dívidas e ao tratamento digno durante cobranças (CDC art. 42).
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+              <a class="tip-link" href="https://www.consumidor.gov.br" target="_blank">🔗 Reclamar no Consumidor.gov</a>
+              <a class="tip-link" href="https://www.bcb.gov.br/acessoinformacao/registrodereclamacoes" target="_blank">🔗 Reclamar no Banco Central</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon-wrap" style="background:var(--amber-dim)">📱</div>
+          <div>
+            <div class="tip-title">Passo 6 — Renda extra emergencial</div>
+            <div class="tip-text">
+              Avalie fontes de renda extra para acelerar a quitação: venda de itens que não usa (OLX, Mercado Livre), serviços de freela, apps de entrega, etc. Mesmo R$ 200–500 extras por mês podem fazer grande diferença na velocidade de quitação de dívidas menores.
+            </div>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon-wrap" style="background:var(--blue-dim)">🏦</div>
+          <div>
+            <div class="tip-title">Passo 7 — Após limpar o nome: construa reserva</div>
+            <div class="tip-text">
+              Quando a situação estabilizar, antes de gastar, construa uma reserva de emergência de 3–6 meses de despesas essenciais. Isso evita que uma crise futura volte a te colocar em dívida. Use conta remunerada ou CDB com liquidez diária (100% CDI+).
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="background:var(--emerald-dim);border-color:rgba(16,185,129,0.2)">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <span style="font-size:1.5rem">📞</span>
+            <div style="font-weight:700;color:var(--text-primary)">Contatos Úteis</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;font-size:0.82rem;color:var(--text-secondary)">
+            <div><strong class="text-green">PROCON SP</strong><br/>📞 151 (gratuito)</div>
+            <div><strong class="text-green">Banco Central</strong><br/>📞 0800 979 2345</div>
+            <div><strong class="text-green">Serasa</strong><br/>📞 0800 723 3728</div>
+            <div><strong class="text-green">SPC Brasil</strong><br/>📞 0800 723 3939</div>
+            <div><strong class="text-green">CVM (investimentos)</strong><br/>📞 0800 724 0401</div>
+            <div><strong class="text-green">Defensoria Pública</strong><br/>📞 0800 723 2121</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Modal: Add Income -->
+<div class="modal-overlay" id="modal-income">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💰 <span id="modal-income-title">Nova Fonte de Renda</span></div>
+      <button class="btn-icon" onclick="closeModal('modal-income')">✕</button>
+    </div>
+    <input type="hidden" id="income-edit-id" />
+    <div class="form-group">
+      <label class="form-label">Descrição *</label>
+      <input type="text" class="form-control" id="income-name" placeholder="Ex: Salário Titular, Salário Cônjuge..." />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-control" id="income-type">
+          <option value="salario">Salário</option>
+          <option value="autonomo">Autônomo / Freelance</option>
+          <option value="aluguel">Aluguel</option>
+          <option value="beneficio">Benefício / Pensão</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor Líquido Total (R$) *</label>
+        <input type="number" class="form-control" id="income-value" placeholder="0,00" step="0.01" min="0" oninput="recalcSplits()" />
+      </div>
+    </div>
+
+    <!-- Split payment toggle -->
+    <div class="form-group">
+      <label class="form-label">Este salário é pago em mais de uma data?</label>
+      <select class="form-control" id="income-split-type" onchange="toggleSplitUI()">
+        <option value="single">Não — pago em uma única data</option>
+        <option value="split2">Sim — pago em 2 datas (adiantamento + saldo)</option>
+        <option value="split3">Sim — pago em 3 datas</option>
+      </select>
+    </div>
+
+    <!-- Single payment -->
+    <div id="split-single">
+      <div class="form-group">
+        <label class="form-label">Dia de Recebimento</label>
+        <select class="form-control" id="income-day-single">
+          <option value="1">Dia 1 (Primeiro dia útil do mês)</option>
+          <option value="5">Dia 5</option>
+          <option value="10">Dia 10</option>
+          <option value="15">Dia 15</option>
+          <option value="20">Dia 20</option>
+          <option value="25">Dia 25</option>
+          <option value="30">Dia 30</option>
+          <option value="31">Último dia do mês</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Split 2 -->
+    <div id="split-split2" class="hidden">
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:12px">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--emerald);margin-bottom:10px">💸 1º RECEBIMENTO — Adiantamento</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Dia</label>
+            <select class="form-control" id="income-day1">
+              <option value="1">Dia 1</option>
+              <option value="5">Dia 5</option>
+              <option value="10">Dia 10</option>
+              <option value="15" selected>Dia 15</option>
+              <option value="20">Dia 20</option>
+              <option value="25">Dia 25</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">% do Salário Líquido</label>
+            <input type="number" class="form-control" id="income-pct1" placeholder="Ex: 53.26" step="0.01" min="0" max="100" oninput="recalcSplits()" />
+          </div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">Valor: <strong id="split-val1" class="text-green">R$ 0,00</strong></div>
+      </div>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--amber);margin-bottom:10px">💸 2º RECEBIMENTO — Saldo (com descontos)</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Dia</label>
+            <select class="form-control" id="income-day2">
+              <option value="25">Dia 25</option>
+              <option value="28">Dia 28</option>
+              <option value="30">Dia 30</option>
+              <option value="31" selected>Último dia do mês</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">% do Salário Líquido (auto)</label>
+            <input type="number" class="form-control" id="income-pct2" placeholder="Auto" step="0.01" readonly style="opacity:0.6" />
+          </div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">Valor: <strong id="split-val2" class="text-amber">R$ 0,00</strong> <span style="font-size:0.65rem;color:var(--text-muted)">(desconta consignados e convênio)</span></div>
+      </div>
+    </div>
+
+    <!-- Split 3 -->
+    <div id="split-split3" class="hidden">
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:12px">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--emerald);margin-bottom:10px">💸 1º RECEBIMENTO</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Dia</label>
+            <select class="form-control" id="income-day1b">
+              <option value="1">Dia 1</option><option value="5">Dia 5</option><option value="10">Dia 10</option><option value="15" selected>Dia 15</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">%</label>
+            <input type="number" class="form-control" id="income-pct1b" placeholder="%" oninput="recalcSplits3()" />
+          </div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">Valor: <strong id="split-val1b" class="text-green">R$ 0,00</strong></div>
+      </div>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:12px">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--blue);margin-bottom:10px">💸 2º RECEBIMENTO</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Dia</label>
+            <select class="form-control" id="income-day2b">
+              <option value="20">Dia 20</option><option value="25">Dia 25</option><option value="28">Dia 28</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">%</label>
+            <input type="number" class="form-control" id="income-pct2b" placeholder="%" oninput="recalcSplits3()" />
+          </div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">Valor: <strong id="split-val2b" class="text-blue">R$ 0,00</strong></div>
+      </div>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--amber);margin-bottom:10px">💸 3º RECEBIMENTO — Saldo final</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Dia</label>
+            <select class="form-control" id="income-day3b">
+              <option value="30">Dia 30</option><option value="31" selected>Último dia do mês</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">% (auto)</label>
+            <input type="number" class="form-control" id="income-pct3b" placeholder="Auto" readonly style="opacity:0.6" />
+          </div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">Valor: <strong id="split-val3b" class="text-amber">R$ 0,00</strong></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-income')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveIncome()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Expense -->
+<div class="modal-overlay" id="modal-expense">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📋 <span id="modal-expense-title">Nova Despesa</span></div>
+      <button class="btn-icon" onclick="closeModal('modal-expense')">✕</button>
+    </div>
+    <input type="hidden" id="expense-edit-id" />
+    <div class="form-group">
+      <label class="form-label">Descrição *</label>
+      <input type="text" class="form-control" id="expense-name" placeholder="Ex: Aluguel, Energia, Supermercado..." />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-control" id="expense-category">
+          <option value="Moradia">🏠 Moradia</option>
+          <option value="Alimentação">🍽️ Alimentação</option>
+          <option value="Transporte">🚗 Transporte</option>
+          <option value="Saúde">🏥 Saúde</option>
+          <option value="Educação">📚 Educação</option>
+          <option value="Energia/Água">💡 Energia/Água</option>
+          <option value="Telefone/Internet">📱 Telefone/Internet</option>
+          <option value="Lazer">🎮 Lazer</option>
+          <option value="Vestuário">👕 Vestuário</option>
+          <option value="Outros">📦 Outros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor Mensal (R$) *</label>
+        <input type="number" class="form-control" id="expense-value" placeholder="0,00" step="0.01" min="0" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Esta despesa é essencial?</label>
+      <select class="form-control" id="expense-essential">
+        <option value="true">✅ Sim — Necessária para sobrevivência</option>
+        <option value="false">❌ Não — Poderia ser cortada/reduzida</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dia de Vencimento <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400">(para fluxo de caixa)</span></label>
+      <select class="form-control" id="expense-dueday">
+        <option value="">Não sei / varia</option>
+        <option value="1">Dia 1</option>
+        <option value="2">Dia 2</option>
+        <option value="3">Dia 3</option>
+        <option value="5">Dia 5</option>
+        <option value="7">Dia 7</option>
+        <option value="8">Dia 8</option>
+        <option value="10">Dia 10</option>
+        <option value="12">Dia 12</option>
+        <option value="15">Dia 15</option>
+        <option value="18">Dia 18</option>
+        <option value="20">Dia 20</option>
+        <option value="25">Dia 25</option>
+        <option value="28">Dia 28</option>
+        <option value="30">Dia 30</option>
+        <option value="31">Último dia do mês</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-expense')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveExpense()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Debt -->
+<div class="modal-overlay" id="modal-debt">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💳 <span id="modal-debt-title">Nova Dívida</span></div>
+      <button class="btn-icon" onclick="closeModal('modal-debt')">✕</button>
+    </div>
+    <input type="hidden" id="debt-edit-id" />
+    <div class="form-group">
+      <label class="form-label">Nome da dívida *</label>
+      <input type="text" class="form-control" id="debt-name" placeholder="Ex: Consignado CEF, Cartão Nubank..." />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Credor / Banco</label>
+        <input type="text" class="form-control" id="debt-creditor" placeholder="Ex: Caixa Econômica, Nubank..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo de Dívida</label>
+        <select class="form-control" id="debt-type">
+          <option value="Consignado">📋 Consignado</option>
+          <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+          <option value="Empréstimo Pessoal">💰 Empréstimo Pessoal</option>
+          <option value="Cheque Especial">📝 Cheque Especial</option>
+          <option value="Financiamento">🏠 Financiamento</option>
+          <option value="Outro">📦 Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label">Saldo Devedor (R$) *</label>
+        <input type="number" class="form-control" id="debt-balance" placeholder="0,00" step="0.01" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parcela Mensal (R$) *</label>
+        <input type="number" class="form-control" id="debt-installment" placeholder="0,00" step="0.01" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parcelas Restantes</label>
+        <input type="number" class="form-control" id="debt-remaining" placeholder="Ex: 48" min="1" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Taxa de Juros a.m. (%)</label>
+        <input type="number" class="form-control" id="debt-rate" placeholder="Ex: 2,5" step="0.01" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dia do Vencimento</label>
+        <input type="number" class="form-control" id="debt-dueday" placeholder="Ex: 5" min="1" max="31" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-debt')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDebt()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Task -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📅 Nova Tarefa</div>
+      <button class="btn-icon" onclick="closeModal('modal-task')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição da Tarefa *</label>
+      <input type="text" class="form-control" id="task-text" placeholder="Ex: Ligar para Nubank e renegociar cartão..." />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prazo (opcional)</label>
+        <input type="date" class="form-control" id="task-due" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prioridade</label>
+        <select class="form-control" id="task-priority">
+          <option value="high">🔴 Alta</option>
+          <option value="medium">🟡 Média</option>
+          <option value="low">🟢 Baixa</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-task')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTask()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOAST CONTAINER ===================== -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
