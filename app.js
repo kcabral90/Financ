@@ -33,6 +33,7 @@ function loadState() {
 function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    scheduleSyncToSheets(); // Auto-sync to Google Sheets if connected
   } catch (e) {
     console.error('Erro ao salvar dados:', e);
     showToast('Erro ao salvar dados no navegador.', 'error');
@@ -1589,6 +1590,235 @@ function escHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+
+// ============================================================
+// GOOGLE SHEETS INTEGRATION
+// ============================================================
+const SHEETS_CLIENT_ID = '598081674902-9m4nodj9j8g45nla7tl0bguqccd87asq.apps.googleusercontent.com';
+const SHEETS_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+const SHEET_ID_KEY = 'financas_livre_sheet_id';
+const SHEET_TITLE = 'Finaças Livre — Dados';
+
+let gisTokenClient = null;
+let gAccessToken = null;
+let gSpreadsheetId = localStorage.getItem(SHEET_ID_KEY) || null;
+let gSyncTimeout = null;
+
+// Init — called from init()
+function initGoogleSheets() {
+  // GIS is loaded async via script tag, check when ready
+  if (typeof google !== 'undefined' && google.accounts) {
+    _setupGIS();
+  } else {
+    // Wait for GIS script to load
+    window.addEventListener('load', () => {
+      if (typeof google !== 'undefined' && google.accounts) _setupGIS();
+    });
+    // Fallback poll
+    const poll = setInterval(() => {
+      if (typeof google !== 'undefined' && google.accounts) {
+        clearInterval(poll);
+        _setupGIS();
+      }
+    }, 500);
+    setTimeout(() => clearInterval(poll), 10000);
+  }
+}
+
+function _setupGIS() {
+  try {
+    gisTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: SHEETS_CLIENT_ID,
+      scope: SHEETS_SCOPES,
+      callback: _handleGISResponse,
+    });
+    updateSyncUI('disconnected');
+  } catch (e) {
+    console.warn('GIS setup error:', e);
+  }
+}
+
+function _handleGISResponse(response) {
+  if (response.error) {
+    console.error('GIS auth error:', response);
+    updateSyncUI('error');
+    showToast('❌ Erro na autenticação Google: ' + (response.error_description || response.error), 'error');
+    return;
+  }
+  gAccessToken = response.access_token;
+  updateSyncUI('syncing');
+  showToast('🔗 Google conectado! Carregando dados da planilha...', 'success');
+  loadFromSheets();
+}
+
+// ---- Auth ----
+function googleSignIn() {
+  // Check if running from file:// — OAuth won't work
+  if (window.location.protocol === 'file:') {
+    showToast('⚠️ Use o arquivo iniciar.bat para conectar ao Google!', 'warning');
+    return;
+  }
+  if (!gisTokenClient) {
+    showToast('⏳ Aguardando Google... tente em instantes.', 'warning');
+    return;
+  }
+  if (gAccessToken) {
+    if (confirm('Desconectar do Google Sheets e parar sincronização?')) googleSignOut();
+    return;
+  }
+  updateSyncUI('connecting');
+  try {
+    gisTokenClient.requestAccessToken();
+  } catch (e) {
+    updateSyncUI('error');
+    showToast('Erro ao iniciar login Google.', 'error');
+  }
+}
+
+function googleSignOut() {
+  if (gAccessToken && typeof google !== 'undefined') {
+    google.accounts.oauth2.revoke(gAccessToken, () => { });
+  }
+  gAccessToken = null;
+  clearTimeout(gSyncTimeout);
+  updateSyncUI('disconnected');
+  showToast('Desconectado do Google.', 'warning');
+}
+
+// ---- Sheets API helper ----
+async function _sheetsReq(method, url, body) {
+  if (!gAccessToken) throw new Error('Não autenticado');
+  const opts = {
+    method,
+    headers: { 'Authorization': `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (res.status === 401) {
+    // Token expired
+    gAccessToken = null;
+    updateSyncUI('disconnected');
+    showToast('⚠️ Sessão Google expirada. Clique em "Google Sheets" para reconectar.', 'warning');
+    throw new Error('Token expirado');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ---- Spreadsheet management ----
+async function _getOrCreateSpreadsheet() {
+  if (gSpreadsheetId) {
+    try {
+      await _sheetsReq('GET', `https://sheets.googleapis.com/v4/spreadsheets/${gSpreadsheetId}?fields=spreadsheetId`);
+      return gSpreadsheetId;
+    } catch (e) {
+      if (e.message !== 'Token expirado') {
+        gSpreadsheetId = null;
+        localStorage.removeItem(SHEET_ID_KEY);
+      } else {
+        throw e;
+      }
+    }
+  }
+  // Create new spreadsheet
+  const data = await _sheetsReq('POST', 'https://sheets.googleapis.com/v4/spreadsheets', {
+    properties: { title: SHEET_TITLE },
+    sheets: [{ properties: { title: 'Dados', index: 0 } }]
+  });
+  gSpreadsheetId = data.spreadsheetId;
+  localStorage.setItem(SHEET_ID_KEY, gSpreadsheetId);
+  showToast('📂 Planilha "Finaças Livre" criada no Google Drive!', 'success');
+  return gSpreadsheetId;
+}
+
+// ---- Sync to Sheets (debounced) ----
+function scheduleSyncToSheets() {
+  if (!gAccessToken) return;
+  clearTimeout(gSyncTimeout);
+  updateSyncUI('syncing');
+  gSyncTimeout = setTimeout(syncToSheets, 3000);
+}
+
+async function syncToSheets() {
+  if (!gAccessToken) return;
+  try {
+    updateSyncUI('syncing');
+    const id = await _getOrCreateSpreadsheet();
+    const payload = JSON.stringify(state);
+    // Write JSON state to Dados!A1, timestamp to A2
+    await _sheetsReq('PUT',
+      `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/Dados!A1:B2?valueInputOption=RAW`, {
+      values: [
+        ['financas_livre_state', payload],
+        ['ultima_sincronizacao', new Date().toLocaleString('pt-BR')],
+      ]
+    });
+    updateSyncUI('synced');
+  } catch (e) {
+    if (e.message !== 'Token expirado') {
+      console.error('Sync error:', e);
+      updateSyncUI('error');
+      showToast('❌ Erro ao sincronizar: ' + e.message, 'error');
+    }
+  }
+}
+
+// ---- Load from Sheets ----
+async function loadFromSheets() {
+  if (!gAccessToken) return;
+  try {
+    updateSyncUI('syncing');
+    const id = await _getOrCreateSpreadsheet();
+    const res = await _sheetsReq('GET',
+      `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/Dados!A1:B2`);
+
+    if (res.values && res.values[0] && res.values[0][1]) {
+      const remoteState = JSON.parse(res.values[0][1]);
+      // Merge remote into local
+      state = { ...state, ...remoteState };
+      if (!state.settings) state.settings = { strategy: 'avalanche' };
+      if (!state.tasks) state.tasks = [];
+      // Save merged state locally
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderPage(currentPage);
+      renderSidebar();
+      const ts = res.values[1]?.[1] || '';
+      showToast(`✅ Dados carregados do Google Sheets!${ts ? ' (' + ts + ')' : ''}`, 'success');
+    } else {
+      // No data in sheets yet — push local data
+      await syncToSheets();
+      showToast('✅ Dados locais enviados para o Google Sheets!', 'success');
+    }
+    updateSyncUI('synced');
+  } catch (e) {
+    if (e.message !== 'Token expirado') {
+      console.error('Load error:', e);
+      updateSyncUI('error');
+      showToast('❌ Erro ao carregar planilha: ' + e.message, 'error');
+    }
+  }
+}
+
+// ---- Sync UI ----
+function updateSyncUI(status) {
+  const btn = document.getElementById('btn-google-sync');
+  if (!btn) return;
+  const configs = {
+    disconnected: { text: '🔗 Google Sheets', extra: '', title: 'Conectar ao Google Sheets para salvar na nuvem' },
+    connecting: { text: '⏳ Conectando...', extra: ' syncing', title: 'Conectando ao Google...' },
+    syncing: { text: '🔄 Sincronizando...', extra: ' syncing', title: 'Sincronizando dados...' },
+    synced: { text: '✅ Google Sheets', extra: ' synced', title: 'Dados sincronizados! Clique para desconectar.' },
+    error: { text: '⚠️ Erro de sync', extra: ' sync-error', title: 'Erro na sincronização. Clique para tentar novamente.' },
+  };
+  const cfg = configs[status] || configs.disconnected;
+  btn.textContent = cfg.text;
+  btn.className = `btn google-sync-btn btn-sm${cfg.extra}`;
+  btn.title = cfg.title;
+}
+
 // ============================================================
 // KEYBOARD SHORTCUTS
 // ============================================================
@@ -1606,7 +1836,16 @@ function init() {
   renderSidebar();
   navigate('dashboard');
 
-  // Add some sample data hint if empty
+  // Show file:// protocol warning (Google OAuth won't work)
+  if (window.location.protocol === 'file:') {
+    const banner = document.getElementById('file-protocol-banner');
+    if (banner) banner.classList.remove('hidden');
+  }
+
+  // Initialize Google Sheets integration
+  initGoogleSheets();
+
+  // Welcome toast for empty state
   if (state.income.length === 0 && state.expenses.length === 0 && state.debts.length === 0) {
     setTimeout(() => {
       showToast('👋 Bem-vindo! Comece adicionando sua renda.', 'info');

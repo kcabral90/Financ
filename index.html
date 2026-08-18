@@ -9,6 +9,7 @@
     content="Ferramenta completa para reorganizar suas finanças, controlar dívidas e traçar um plano de recuperação financeira." />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -84,6 +85,10 @@
           </div>
         </div>
         <div class="topbar-actions">
+          <button id="btn-google-sync" class="btn google-sync-btn btn-sm" onclick="googleSignIn()"
+            title="Conectar ao Google Sheets">
+            🔗 Google Sheets
+          </button>
           <button class="btn btn-primary btn-sm" onclick="exportData()" title="Exportar dados">⬇ Exportar</button>
           <label class="btn btn-secondary btn-sm pointer" title="Importar dados">
             ⬆ Importar
@@ -94,6 +99,18 @@
 
       <!-- ==================== PAGE: DASHBOARD ==================== -->
       <section class="page-content" id="page-dashboard">
+
+        <!-- File:// warning banner -->
+        <div id="file-protocol-banner" class="hidden"
+          style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:0.82rem;color:#FCD34D">
+          <span style="font-size:1.2rem">⚠️</span>
+          <div>
+            <strong>Para usar o Google Sheets, abra o app pelo arquivo <code
+                style="background:rgba(0,0,0,0.3);padding:1px 6px;border-radius:4px">iniciar.bat</code></strong> — ele
+            inicia um servidor local necessário para a autenticação Google funcionar.<br />
+            <span style="opacity:0.8">Os dados locais continuam salvos normalmente enquanto isso.</span>
+          </div>
+        </div>
 
         <!-- Onboarding banner (shown when no data) -->
         <div class="onboarding-banner" id="onboarding-banner">
