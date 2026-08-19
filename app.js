@@ -56,7 +56,15 @@ function fmtPct(value) {
 }
 
 function totalIncome() {
-  return state.income.reduce((s, i) => s + Number(i.value), 0);
+  return state.income
+    .filter(i => i.occurrence !== 'yearly')
+    .reduce((sum, i) => sum + Number(i.value), 0);
+}
+
+function totalSporadicIncome(monthIndex) {
+  return state.income
+    .filter(i => i.occurrence === 'yearly' && i.occurrenceMonth === monthIndex)
+    .reduce((sum, i) => sum + Number(i.value), 0);
 }
 
 function totalExpenses() {
@@ -310,6 +318,12 @@ function renderDiagnosis(icr, income, committed, balance) {
 
   let msgs = [];
 
+  const currentMonthIdx = new Date().getMonth();
+  const sporadic = totalSporadicIncome(currentMonthIdx);
+  if (sporadic > 0) {
+    msgs.push(`<span class="text-blue">🌟 <strong>Receitas Extras neste mês: ${fmt(sporadic)}</strong>.</span> O fluxo de caixa abaixo não inclui esse valor, mas ele será simulado automaticamente na sua Projeção de Quitação!`);
+  }
+
   if (icr > 100) {
     msgs.push(`<span class="text-red">🚨 Situação Emergencial:</span> Seu comprometimento de ${fmtPct(icr)} da renda está acima de 100%. Você está gastando mais do que ganha. Ação imediata é necessária.`);
   } else if (icr > 60) {
@@ -444,6 +458,11 @@ function renderDebtsBarChart() {
 // ============================================================
 // INCOME — SPLIT PAYMENT UI HELPERS
 // ============================================================
+function toggleIncomeOccurrenceUI() {
+  const val = document.getElementById('income-occurrence').value;
+  document.getElementById('income-occurrence-month-wrapper').classList.toggle('hidden', val !== 'yearly');
+}
+
 function toggleSplitUI() {
   const val = document.getElementById('income-split-type').value;
   document.getElementById('split-single').classList.toggle('hidden', val !== 'single');
@@ -503,10 +522,17 @@ function renderIncome() {
   }
   emptyEl.classList.add('hidden');
 
-  tbody.innerHTML = state.income.map(inc => `
+  const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  tbody.innerHTML = state.income.map(inc => {
+    const isYearly = inc.occurrence === 'yearly';
+    const occLabel = isYearly ? `<span class="badge badge-amber">Anual (${MONTH_NAMES[inc.occurrenceMonth]})</span>` : '';
+
+    return `
     <tr>
       <td>
-        <div style="font-weight:600">${escHtml(inc.name)}</div>
+        <div style="font-weight:600">${escHtml(inc.name)} ${occLabel}</div>
+        ${inc.grossValue ? `<div style="font-size:0.75rem;color:var(--text-muted)">Bruto: R$ ${fmt(inc.grossValue).replace('R$&nbsp;', '')}</div>` : ''}
       </td>
       <td><span class="badge badge-blue">${INCOME_TYPE_LABELS[inc.type] || inc.type}</span></td>
       <td class="amount-positive">${fmt(inc.value)}</td>
@@ -517,18 +543,75 @@ function renderIncome() {
         </div>
       </td>
     </tr>
-  `).join('');
+  `}).join('');
+}
+
+function autoCalcNetIncome() {
+  const type = document.getElementById('income-type').value;
+  const grossInput = document.getElementById('income-gross');
+  const netInput = document.getElementById('income-value');
+
+  if (type !== 'salario') return; // Only calculate INSS/IRRF for CLT
+
+  const gross = parseFloat(grossInput.value);
+  if (isNaN(gross) || gross <= 0) {
+    if (grossInput.value === '') {
+      // Don't clear net if gross is just empty
+    }
+    return;
+  }
+
+  // INSS 2024 Progressive
+  let inss = 0;
+  if (gross <= 1412.00) {
+    inss = gross * 0.075;
+  } else if (gross <= 2666.68) {
+    inss = (1412.00 * 0.075) + ((gross - 1412.00) * 0.09);
+  } else if (gross <= 4000.03) {
+    inss = (1412.00 * 0.075) + ((2666.68 - 1412.00) * 0.09) + ((gross - 2666.68) * 0.12);
+  } else if (gross <= 7786.02) {
+    inss = (1412.00 * 0.075) + ((2666.68 - 1412.00) * 0.09) + ((4000.03 - 2666.68) * 0.12) + ((gross - 4000.03) * 0.14);
+  } else {
+    inss = 908.86; // Teto INSS 2024
+  }
+
+  // IRRF 2024
+  const baseIRRF = gross - inss;
+  const baseIRRF_simplificado = gross - 564.80; // Desconto simplificado mensal
+  const baseCalculo = Math.min(baseIRRF, baseIRRF_simplificado);
+
+  let irrf = 0;
+  if (baseCalculo <= 2259.20) {
+    irrf = 0;
+  } else if (baseCalculo <= 2826.65) {
+    irrf = (baseCalculo * 0.075) - 169.44;
+  } else if (baseCalculo <= 3751.05) {
+    irrf = (baseCalculo * 0.15) - 381.44;
+  } else if (baseCalculo <= 4664.68) {
+    irrf = (baseCalculo * 0.225) - 662.77;
+  } else {
+    irrf = (baseCalculo * 0.275) - 896.00;
+  }
+
+  if (irrf < 0) irrf = 0;
+
+  const net = gross - inss - irrf;
+  netInput.value = net.toFixed(2);
+  recalcSplits();
 }
 
 function saveIncome() {
   const name = document.getElementById('income-name').value.trim();
   const type = document.getElementById('income-type').value;
+  const occurrence = document.getElementById('income-occurrence').value;
+  const occurrenceMonth = parseInt(document.getElementById('income-month').value);
   const value = parseFloat(document.getElementById('income-value').value);
+  const grossValue = parseFloat(document.getElementById('income-gross').value) || null;
   const editId = document.getElementById('income-edit-id').value;
   const splitType = document.getElementById('income-split-type').value;
 
   if (!name) { showToast('Informe a descrição da renda.', 'warning'); return; }
-  if (isNaN(value) || value <= 0) { showToast('Informe um valor válido.', 'warning'); return; }
+  if (isNaN(value) || value <= 0) { showToast('Informe um valor líquido válido.', 'warning'); return; }
 
   // Build payments array
   let payments = [];
@@ -560,7 +643,7 @@ function saveIncome() {
     ];
   }
 
-  const incomeObj = { name, type, value, splitType, payments };
+  const incomeObj = { name, type, occurrence, occurrenceMonth, value, grossValue, splitType, payments };
 
   if (editId) {
     const idx = state.income.findIndex(i => i.id === editId);
@@ -583,8 +666,13 @@ function editIncome(id) {
   document.getElementById('income-edit-id').value = inc.id;
   document.getElementById('income-name').value = inc.name;
   document.getElementById('income-type').value = inc.type;
+  document.getElementById('income-occurrence').value = inc.occurrence || 'monthly';
+  document.getElementById('income-month').value = inc.occurrenceMonth !== undefined ? inc.occurrenceMonth : 0;
+  document.getElementById('income-gross').value = inc.grossValue || '';
   document.getElementById('income-value').value = inc.value;
   document.getElementById('modal-income-title').textContent = 'Editar Renda';
+
+  toggleIncomeOccurrenceUI();
 
   // Restore split UI
   const splitType = inc.splitType || 'single';
@@ -1379,7 +1467,14 @@ function renderProjection() {
   const MONTHS = 120; // max 10 years
   const today = new Date();
 
-  let debtsCopy = debts.map(d => ({ ...d, balance: Number(d.balance), installment: Number(d.installment), rate: Number(d.rate) || 0 }));
+  // Use the prioritized debt list according to user strategy
+  let debtsCopy = getOrderedDebts().map(d => ({
+    ...d,
+    balance: Number(d.balance),
+    installment: Number(d.installment),
+    rate: Number(d.rate) || 0
+  }));
+
   let expenses = totalExpenses();
 
   const balanceLabels = [];
@@ -1389,7 +1484,6 @@ function renderProjection() {
   let freeMonth = null;
   let healthyMonth = null;
   let totalInterestPaid = 0;
-  let totalInterestMinimal = 0;
 
   for (let m = 0; m <= MONTHS; m++) {
     const activeDebts = debtsCopy.filter(d => d.balance > 0);
@@ -1397,21 +1491,50 @@ function renderProjection() {
     const currentICR = income > 0 ? ((expenses + currentInstallments) / income) * 100 : 0;
     const currentDebt = activeDebts.reduce((s, d) => s + d.balance, 0);
 
-    balanceLabels.push(m === 0 ? 'Hoje' : formatMonthYear(addMonths(today, m)));
+    const simDate = addMonths(today, m);
+    balanceLabels.push(m === 0 ? 'Hoje' : formatMonthYear(simDate));
     balanceData.push(Math.max(0, parseFloat(currentDebt.toFixed(2))));
     icrData.push(parseFloat(currentICR.toFixed(2)));
 
     if (freeMonth === null && currentDebt <= 0 && m > 0) freeMonth = m;
     if (healthyMonth === null && currentICR <= 30 && m > 0) healthyMonth = m;
 
-    // Apply payments
-    debtsCopy = debtsCopy.map(d => {
-      if (d.balance <= 0) return d;
-      const interest = d.balance * (d.rate / 100);
-      totalInterestPaid += interest;
-      const principal = Math.min(d.installment - interest, d.balance);
-      return { ...d, balance: Math.max(0, d.balance - principal) };
-    });
+    if (m > 0 && currentDebt > 0) {
+      // Calculate extra cash available this month to accelerate payoff
+      let availableExtraCash = 0;
+      const monthlySurplus = income - (expenses + currentInstallments);
+      if (monthlySurplus > 0) availableExtraCash += monthlySurplus;
+
+      // Inject sporadic incomes scheduled for this calendar month (e.g. 13th salary in November)
+      const simMonthIdx = simDate.getMonth();
+      availableExtraCash += totalSporadicIncome(simMonthIdx);
+
+      // Apply payments prioritizing the strategy order
+      for (let i = 0; i < debtsCopy.length; i++) {
+        const d = debtsCopy[i];
+        if (d.balance <= 0) continue;
+
+        const interest = d.balance * (d.rate / 100);
+        totalInterestPaid += interest;
+
+        let payment = d.installment;
+        // If this is the highest priority active debt, inject all available extra cash
+        if (activeDebts.length > 0 && d.id === activeDebts[0].id) {
+          payment += availableExtraCash;
+          availableExtraCash = 0;
+        }
+
+        let principal = payment - interest;
+
+        if (principal > d.balance) {
+          // Overpaid! Roll the leftover cash to the next debt in the priority list
+          availableExtraCash += (principal - d.balance);
+          principal = d.balance;
+        }
+
+        d.balance = Math.max(0, d.balance - principal);
+      }
+    }
   }
 
   // Milestones

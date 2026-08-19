@@ -1,0 +1,259 @@
+{
+  "income": [
+    {
+      "id": "msz7zlviqe3va8ys4r",
+      "name": "Salario Gabi",
+      "type": "salario",
+      "value": 4209.53,
+      "grossValue": 5100,
+      "splitType": "single",
+      "payments": [
+        {
+          "day": 1,
+          "pct": 100,
+          "amount": 4209.53
+        }
+      ]
+    },
+    {
+      "id": "msz80q12z4562j2ix8s",
+      "name": "Salario Kaue",
+      "type": "salario",
+      "value": 9057.43,
+      "grossValue": 12166,
+      "splitType": "split2",
+      "payments": [
+        {
+          "day": 15,
+          "pct": 53.26,
+          "amount": 4823.99
+        },
+        {
+          "day": 31,
+          "pct": 46.74,
+          "amount": 4233.44
+        }
+      ]
+    }
+  ],
+  "expenses": [
+    {
+      "id": "msz83peeo4xh7i99o8",
+      "name": "Aluguel",
+      "category": "Moradia",
+      "value": 4188,
+      "essential": "true",
+      "dueday": "7"
+    },
+    {
+      "id": "msz84njavzq3nlixahe",
+      "name": "Condominio",
+      "category": "Moradia",
+      "value": 1000,
+      "essential": "true",
+      "dueday": "10"
+    },
+    {
+      "id": "msz8b86lk32sb63g5ve",
+      "name": "Van Escolar",
+      "category": "Transporte",
+      "value": 300,
+      "essential": "true",
+      "dueday": "15"
+    },
+    {
+      "id": "msz8ebmkid96yl3h2t",
+      "name": "Enel",
+      "category": "Energia/Água",
+      "value": 350,
+      "essential": "true",
+      "dueday": "8"
+    },
+    {
+      "id": "msz8uym14mwe6bk7p1m",
+      "name": "Juliana Unha",
+      "category": "Vestuário",
+      "value": 210,
+      "essential": "true",
+      "dueday": "1"
+    },
+    {
+      "id": "msz8vqa1ko4t4xh3ri",
+      "name": "Vivo",
+      "category": "Telefone/Internet",
+      "value": 155.1,
+      "essential": "true",
+      "dueday": "28"
+    },
+    {
+      "id": "msz8wjc19esn28tzrm7",
+      "name": "Sabesp",
+      "category": "Energia/Água",
+      "value": 180,
+      "essential": "true",
+      "dueday": "18"
+    },
+    {
+      "id": "msz9modgmqkwf7y0xi",
+      "name": "Mercado",
+      "category": "Alimentação",
+      "value": 1500,
+      "essential": "true",
+      "dueday": "20"
+    },
+    {
+      "id": "msz9nbt95ukiior2aoh",
+      "name": "Gasolina",
+      "category": "Transporte",
+      "value": 420,
+      "essential": "true",
+      "dueday": null
+    },
+    {
+      "id": "msz9nvr8bd7m7rlp4no",
+      "name": "Almoço Gabi",
+      "category": "Alimentação",
+      "value": 720,
+      "essential": "true",
+      "dueday": null
+    }
+  ],
+  "debts": [
+    {
+      "id": "msz880nxt1vnqbdetnr",
+      "name": "Cartão Nubank",
+      "creditor": "Nubank",
+      "type": "Cartão de Crédito",
+      "balance": 3015,
+      "installment": 730.49,
+      "remaining": 5,
+      "rate": 11.75,
+      "dueday": 2
+    },
+    {
+      "id": "msz8deakwzljk6u128s",
+      "name": "Empréstimo Nubank Gabi",
+      "creditor": "Nubank",
+      "type": "Empréstimo Pessoal",
+      "balance": 3289.76,
+      "installment": 328.98,
+      "remaining": 10,
+      "rate": 4.95,
+      "dueday": 1
+    },
+    {
+      "id": "msz91dx43y3vy92nzn4",
+      "name": "Consignado P",
+      "creditor": "Pic Pay",
+      "type": "Consignado",
+      "balance": 2506.2,
+      "installment": 41.77,
+      "remaining": 60,
+      "rate": 4.79,
+      "dueday": 31
+    },
+    {
+      "id": "msz92tlco6q9lul0tfj",
+      "name": "Consignado P2",
+      "creditor": "Pic Pay",
+      "type": "Consignado",
+      "balance": 4318.8,
+      "installment": 71.98,
+      "remaining": 60,
+      "rate": 4.79,
+      "dueday": 31
+    },
+    {
+      "id": "msz94o2wpalp3s104bg",
+      "name": "Consignado P3",
+      "creditor": "Pic Pay",
+      "type": "Consignado",
+      "balance": 7688.72,
+      "installment": 105.51,
+      "remaining": 72,
+      "rate": 4.79,
+      "dueday": 31
+    },
+    {
+      "id": "msz99nlb4mjzmgfiulm",
+      "name": "Consignado P4",
+      "creditor": "Pic Pay",
+      "type": "Consignado",
+      "balance": 7500,
+      "installment": 125,
+      "remaining": 60,
+      "rate": 4.75,
+      "dueday": 31
+    },
+    {
+      "id": "msz9amnr6dky7dqrvyw",
+      "name": "Consignado P5",
+      "creditor": "Pic Pay",
+      "type": "Consignado",
+      "balance": 10544.4,
+      "installment": 175.74,
+      "remaining": 60,
+      "rate": 4.75,
+      "dueday": 31
+    },
+    {
+      "id": "msz9bkjq7l5xgbzpznl",
+      "name": "Consignado P6",
+      "creditor": "Pic Pay",
+      "type": "Consignado",
+      "balance": 25924.2,
+      "installment": 432.07,
+      "remaining": 60,
+      "rate": 4.75,
+      "dueday": 31
+    },
+    {
+      "id": "msz9cfwfdlfz5msht3",
+      "name": "Consignado P7",
+      "creditor": "Pic Pay",
+      "type": "Consignado",
+      "balance": 30851.4,
+      "installment": 514.19,
+      "remaining": 60,
+      "rate": 4.75,
+      "dueday": 31
+    },
+    {
+      "id": "msz9g4riusayicum1g",
+      "name": "Consignado Brad1",
+      "creditor": "Bradesco",
+      "type": "Consignado",
+      "balance": 4442.52,
+      "installment": 396.34,
+      "remaining": 19,
+      "rate": 3.22,
+      "dueday": 31
+    },
+    {
+      "id": "msz9j4a53975u8eipp8",
+      "name": "Consignado Brad2",
+      "creditor": "Bradesco",
+      "type": "Consignado",
+      "balance": 10016.22,
+      "installment": 868.55,
+      "remaining": 20,
+      "rate": 2.95,
+      "dueday": 31
+    },
+    {
+      "id": "msz9lexp2rowumy9z7g",
+      "name": "Consignado Pai",
+      "creditor": "Banco do Brasil",
+      "type": "Consignado",
+      "balance": 48000,
+      "installment": 1000,
+      "remaining": 36,
+      "rate": 1.79,
+      "dueday": 15
+    }
+  ],
+  "tasks": [],
+  "settings": {
+    "strategy": "snowball"
+  }
+}
